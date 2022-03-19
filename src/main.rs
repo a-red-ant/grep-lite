@@ -1,20 +1,44 @@
+extern crate clap;
+extern crate regex;
+
+use clap::{App, Arg};
+use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
+// The following listing creates a complete program that takes a regular
+// expression pattern and an input file as arguments.
 fn main() {
-    // Creating a File requires a path argument and error handling in case the file
-    // does not exist. This program crashes if a "readme.txt" is not present.
-    let f = File::open("readme.md").unwrap();
+    let args = App::new("grep-lite")
+        .version("0.1")
+        .about("searches for patterns")
+        .arg(
+            Arg::with_name("pattern")
+                .help("The pattern to search for")
+                .takes_value(true)
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("input")
+                .help("File to search")
+                .takes_value(true)
+                .required(true),
+        )
+        .get_matches();
+
+    let pattern = args.value_of("pattern").unwrap();
+    let re = Regex::new(pattern).unwrap();
+    let input = args.value_of("input").unwrap();
+    let f = File::open(input).unwrap();
     let reader = BufReader::new(f);
 
-    // There is a subtle behavior change here.
-    // BufReader::lines() removes the trailing newline character
-    // from each line
     for line_ in reader.lines() {
-        // Unwrapping the Result possible error at each line is
-        // still required, as with the manual version
         let line = line_.unwrap();
-        println!("{} ({} bytes long)", line, line.len());
+        // line is a String but re.find() takes &str as an argument
+        match re.find(&line) {
+            Some(_) => println!("{}", line),
+            None => (),
+        }
     }
 }
