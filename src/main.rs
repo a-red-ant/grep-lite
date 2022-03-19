@@ -30,7 +30,7 @@ through millions of pages?";
     }
 
     // When there are no matches, exit early
-    if tags.len() == 0 {
+    if tags.is_empty() {
         return;
     }
 
